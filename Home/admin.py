@@ -131,6 +131,13 @@ class QuizAdmin(NestedModelAdmin):
     list_filter = ('stage', 'subject', 'chapter')
     search_fields = ('name', 'chapter', 'stage')
     inlines = [QuestionInlineAdmin,]
+    # class Media:
+    #     # js = (
+    #     #     'smart-selects/admin/js/chainedfk.js',
+    #     #     'smart-selects/admin/js/chainedm2m.js',
+    #     #     'smart-selects/admin/js/bindfields.js'
+    #     # )
+    #     pass
 
     def view_questions_link(self, obj):
         count = obj.question_quiz.count()

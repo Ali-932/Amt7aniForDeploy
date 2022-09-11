@@ -1,3 +1,3 @@
 from django.shortcuts import render
-
-# Create your views here.
+def confirm_em(request):
+    return render(request, "restauth/templates/email_confirmation.html")

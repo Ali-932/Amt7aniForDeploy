@@ -2,7 +2,7 @@ import uuid
 
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.db.models import CheckConstraint, Q, F, Avg, Count
+from smart_selects.db_fields import ChainedForeignKey
 
 User = get_user_model()
 
@@ -42,6 +42,7 @@ class TimeChoices():
                    (min_55, '55:00'),
                    (min_60, '60:00'))
 
+
 class StageChoices():
     stage1 = 'اول ابتدائي'
     stage2 = 'ثاني ابتدائي'
@@ -78,7 +79,7 @@ class StageType():
     literary = "ادبي"
     biologiocal = "احيائي"
     engineerical = "تطبيقي"
-    none='لا يوجد'
+    none = 'لا يوجد'
     types = (
         (schientific, 'علمي'),
         (literary, 'ادبي'),
@@ -96,26 +97,22 @@ class Profile(models.Model):
     created = models.DateTimeField(auto_now_add=True, )
     modified = models.DateTimeField(auto_now=True, )
     id = models.AutoField(primary_key=True, )
-    uid = models.UUIDField(unique=True, editable=False, default=uuid.uuid4, verbose_name='Public identifier', )
-    def get_avg_score(self):
-        avg_score=UserQuizzes.objects.filter(user=self).aggregate(Avg('score'))
-        return avg_score['score__avg']
-    def total_quizzes(self):
-        total_quiz=UserQuizzes.objects.filter(user=self).aggregate(Count("id"))
-        return total_quiz['id__count']
-    def Update_profile(self, name,gender,):
-        profile=Profile.objects.get(id=self.id)
-        profile.name=name
-        profile.save(['name'])
-        profile.gender=gender
-        profile.save(['gender'])
+    stage = models.ForeignKey("Stage", on_delete=models.SET_NULL, null=True, blank=True, related_name="profile_stage")
+
+    def Update_profile(self, name, gender, stage, ):
+        self.name = name
+        self.gender = gender
+        new_stage = Stage.objects.get(stages=stage)
+        self.stage = new_stage
+        self.save()
 
     def __str__(self):
         return self.name
+
     class Meta:
         ordering = ['id']
         verbose_name = "Profile"
-        verbose_name_plural='Profiles'
+        verbose_name_plural = 'Profiles'
         # constraints = [
         #     CheckConstraint(
         #         check = Q(end_date__gt=F('start_date')),
@@ -125,12 +122,8 @@ class Profile(models.Model):
 
 
 class Stage(models.Model):
-    stages = models.CharField(max_length=255, choices=StageChoices.stages,null=False,blank=False)
-    profile = models.OneToOneField(Profile, on_delete=models.CASCADE, null=True, blank=True)
-    type = models.CharField(max_length=255, choices=StageType.types, null=True, blank=True,default=StageType.none)
-    def Update_stage(self, new_stage,):
-        stage=Stage.objects.get(id=self.id)
-        stage.name=new_stage
+    stages = models.CharField(max_length=255, choices=StageChoices.stages, null=False, blank=False)
+    type = models.CharField(max_length=255, choices=StageType.types, default=StageType.none)
 
     def __str__(self):
         if self.type != StageType.none:
@@ -141,6 +134,10 @@ class Stage(models.Model):
     class Meta:
         verbose_name = 'Stage'
         verbose_name_plural = 'Stages'
+        unique_together = ("stages", "type",)
+
+    def get_subjects(self):  # new
+        return Subjects.objects.filter(stage=self)
 
 
 class Subjects(models.Model):
@@ -154,56 +151,106 @@ class Subjects(models.Model):
     def __str__(self):
         return self.name
 
+    def get_chapters(self):  # new
+        return Chapters.objects.filter(subject=self)
+        # <QuerySet [<Chapters: فصل اول>, <Chapters: فصل ثاني>]>
+
 
 class Chapters(models.Model):
     name = models.CharField(max_length=255, blank=True)
-    subject = models.ForeignKey(Subjects, on_delete=models.CASCADE, related_name='chapter_subject',null=True)
+    subject = models.ForeignKey(Subjects, on_delete=models.CASCADE, related_name='chapter_subject', null=True)
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        verbose_name = 'Chapter'
+        verbose_name_plural = 'Chapters'
 
 
 class Quiz(models.Model):
     name = models.CharField(max_length=255, null=True, blank=True)
     stage = models.ForeignKey(Stage, on_delete=models.SET_NULL, null=True, related_name='quiz_stage')
-    subject = models.ForeignKey(Subjects, on_delete=models.SET_NULL, null=True, related_name='quiz_subject')
-    chapter = models.ForeignKey(Chapters, on_delete=models.SET_NULL, related_name='quiz_chapter', null=True)
+    subject = ChainedForeignKey(Subjects,
+                                chained_field="stage",
+                                chained_model_field="stage",
+                                show_all=True,
+                                on_delete=models.SET_NULL, null=True, related_name='quiz_subject')
+    chapter = models.ForeignKey(Chapters,
+    on_delete=models.SET_NULL, related_name='quiz_chapter',
+                                null=True)  # manyTomany
     timer = models.CharField(choices=TimeChoices.timeChoices, max_length=255)
+    created = models.DateTimeField(auto_now_add=True, )
+    q_num = models.IntegerField(default=0)  # change to 10 after questions are set
 
     def __str__(self):
         return self.name
 
+    def get_questions(self):
+        questions = Question.objects.filter(quiz_id=self.id).order_by('?')[:self.q_num]
+
+        return questions
+
+    def get_All_questions(self, subject, stage):
+        questions = Question.objects.filter(quiz__subject=subject, quiz__stage=stage).order_by('?')
+        # <QuerySet [<Question: ماهي علاقه المقاومه بلكهرباء>, <Question: ماهي علاقه عناصر الماء>, <Question: ماهي علاقه الهواء بلماء>, <Question: عرف الماء>]>
+        return questions
+
 
 class Question(models.Model):
     questionBody = models.CharField(max_length=255, blank=True, null=True)
+    # ChoiceA = models.CharField(max_length=255, blank=True, null=True)
+    # a_isTure = models.BooleanField(default=False)
+    # ChoiceB = models.CharField(max_length=255, blank=True, null=True)
+    # b_isTure = models.BooleanField(default=False)
+    # ChoiceC = models.CharField(max_length=255, blank=True, null=True)
+    # c_isTure = models.BooleanField(default=False)
     quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, related_name='question_quiz', null=True, blank=True)
-    choiceA = models.CharField(max_length=255, blank=True, null=True)
-    choiceA_isCorrect=models.BooleanField(default=False)
-    choiceB = models.CharField(max_length=255, blank=True, null=True)
-    choiceB_isCorrect=models.BooleanField(default=False)
-    choiceC = models.CharField(max_length=255, blank=True, null=True)
-    choiceC_isCorrect=models.BooleanField(default=False)
     isProblem = models.BooleanField(default=False)
     image = models.ImageField(upload_to='images/', null=True, blank=True, )
+    # extra = models.JSONField(default=dict, null=True, blank=True)
 
     def __str__(self):
         return "%s" % self.questionBody
 
+
+class choices(models.Model):
+    question = models.ForeignKey(Question, on_delete=models.SET_NULL, related_name='choices_question', null=True,
+                                 blank=True)
+    choiceBody = models.CharField(max_length=70, blank=True, null=True)
+    isCorrect = models.BooleanField(default=False)
+    def __str__(self):
+        return str(self.id)
+
+
+
 class UserQuizzes(models.Model):
-    user=models.ForeignKey(Profile,on_delete=models.CASCADE,null=True)
-    created = models.DateTimeField(auto_now_add=True, )
-    subject=models.ForeignKey(Subjects,on_delete=models.SET_NULL,related_name="subject_userquizzes",null=True)
-    chapter=models.ForeignKey(Chapters,on_delete=models.SET_NULL,related_name="chapter_userquizzes",null=True)
-    score=models.IntegerField(default=0,editable=False,)
-# class choices(models.Model):
-#     question = models.ForeignKey(Question, on_delete=models.SET_NULL, related_name='choices_question', null=True,
-#                                  blank=True)
-#     choiceBody = models.CharField(max_length=70, blank=True, null=True)
-#
-#     def __str__(self):
-#         if self.id==1:
-#             return str(1)
-#         elif self.id==2:
-#             return str(2)
-#         else:
-#             return str(round((self.id-1)/self.id))
+    user = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, related_name='profile_userquizzes')
+    created = models.DateTimeField(auto_now_add=True, )  # created from front
+    subject = models.ForeignKey(Subjects, on_delete=models.SET_NULL, related_name="subject_userquizzes", null=True)
+    chapter = models.ForeignKey(Chapters, on_delete=models.SET_NULL, related_name="chapter_userquizzes", null=True)
+    score = models.IntegerField(default=0, editable=False)
+
+    def get(self):
+        get_created = self.created
+        get_subject = self.subject
+        get_chapter = self.chapter
+        get_score = self.score
+        return {
+            'created': get_created,
+            'subject': get_subject,
+            'chapter': get_chapter,
+            'score': get_score,
+        }
+
+
+class UserScoring(models.Model):
+    user = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, related_name='profile_scoring')
+    total_score_points = models.IntegerField(default=0, editable=False)
+    total_right_choices = models.IntegerField(default=0, editable=False)
+
+    def get_avg_score(self):
+        avg_score = self.total_right_choices / self.total_score_points
+        return str(avg_score * 100) + '%'
+
+# django_loger

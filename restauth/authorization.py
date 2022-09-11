@@ -6,9 +6,6 @@ from config import settings
 
 User = get_user_model()
 
-
-# eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbCI6InVzZXJAZXhhbXBsZS5jb20ifQ.X9-RqWLql-9n6NrkFVjXETHv2BRcVBaCXiQmXK3Nwws
-
 class AuthBearer(HttpBearer):
     def authenticate(self, request, token):
         try:

@@ -1,13 +1,14 @@
+from django.contrib.auth.password_validation import validate_password
 from ninja import Schema
+from ninja.errors import ValidationError
 from pydantic import EmailStr, Field
 
 
 class AccountIn(Schema):
-    first_name: str
-    last_name: str
+    fullname: str
     email: EmailStr
-    password1: str = Field(min_length=8)
-    password2: str = Field(min_length=8)
+    password1: str = Field(min_length=9)
+    password2: str = Field(min_length=9)
 
 
 class TokenOut(Schema):
@@ -24,7 +25,34 @@ class AuthOut(Schema):
     token: TokenOut
     account: AccountOut
 
+class ResetPassword(Schema):
+
+    password1: str = Field(min_length=9)
+    password2: str = Field(min_length=9)
+    email: EmailStr
 
 class SigninIn(Schema):
     email: EmailStr
     password: str
+
+
+class FourOFourOut(Schema):
+    detail: str
+
+class ResetPasswordRequest(Schema):
+    email: EmailStr
+
+
+class TwoOTwo(Schema):
+    detail: str
+
+
+
+
+class TwoOO(Schema):
+    detail: str
+
+class FourOO(Schema):
+    detail: str
+class FourOThree(Schema):
+    detail: str

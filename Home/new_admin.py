@@ -51,9 +51,9 @@ class ClothesAdmin(admin.ModelAdmin):
         'id',
         'show_average')
 
-    def show_average(self, obj):
-
-        return Profile.get_avg_score(obj)
+    # def show_average(self, obj):
+    #
+    #     return Profile.get_avg_score(obj)
 
     list_filter = ('user', 'created', 'modified')
     search_fields = ('name',)

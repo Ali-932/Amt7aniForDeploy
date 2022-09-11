@@ -11,8 +11,8 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 import os
 from pathlib import Path
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -43,8 +43,26 @@ INSTALLED_APPS = [
     'nested_admin',
     'smart_selects',
     'restauth',
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
 
 ]
+SITE_ID = 1
+ACCOUNT_EMAIL_VERIFICATION='mandatory'
+ACCOUNT_CONFIRM_EMAIL_ON_GET=True
+ACCOUNT_EMAIL_REQUIRED=True
+SOCIAL_AUTH_URL_NAMESPACE = "accounts:social"
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+
+LOGIN_URL='emailC'
+# LOGIN_REDIRECT_URL='emailC'
+ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+
+ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL='emailC'
+
 JAZZMIN_SETTINGS = {
 
     # title of the window (Will default to current_admin_site.site_title if absent or None)
@@ -202,7 +220,8 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [Path(BASE_DIR,'templates')
+],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -210,6 +229,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+
             ],
         },
     },
@@ -230,7 +250,23 @@ DATABASES = {
 
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
+
 AUTH_USER_MODEL = 'restauth.EmailAccount'
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'amt7ani932@gmail.com'
+EMAIL_HOST_PASSWORD = 'qhpwuhhflhhjjvpj'
+DEFAULT_FROM_EMAIL = 'noreply<no_reply@domain.com>'
+AUTHENTICATION_BACKENDS = [
+    # Needed to login by username in Django admin, regardless of `allauth`
+    'django.contrib.auth.backends.ModelBackend',
+
+    # `allauth` specific authentication methods, such as login by e-mail
+    'allauth.account.auth_backends.AuthenticationBackend',
+]
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
