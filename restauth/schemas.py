@@ -9,6 +9,8 @@ class AccountIn(Schema):
     email: EmailStr
     password1: str = Field(min_length=9)
     password2: str = Field(min_length=9)
+    gender:str
+    stage:str
 
 
 class TokenOut(Schema):

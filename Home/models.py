@@ -1,7 +1,9 @@
-import uuid
 
 from django.db import models
 from django.contrib.auth import get_user_model
+from django.db.models import  Sum, Count
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 from smart_selects.db_fields import ChainedForeignKey
 
 User = get_user_model()
@@ -144,6 +146,8 @@ class Subjects(models.Model):
     name = models.CharField(max_length=25)
     stage = models.ForeignKey(Stage, on_delete=models.SET_NULL, null=True, related_name='subject_stage')
 
+    # color = ColorField(default='#FF0000')
+
     class Meta:
         verbose_name = 'Subject'
         verbose_name_plural = 'Subjects'
@@ -174,10 +178,13 @@ class Quiz(models.Model):
     subject = ChainedForeignKey(Subjects,
                                 chained_field="stage",
                                 chained_model_field="stage",
-                                show_all=True,
+                                show_all=False,
                                 on_delete=models.SET_NULL, null=True, related_name='quiz_subject')
-    chapter = models.ForeignKey(Chapters,
-    on_delete=models.SET_NULL, related_name='quiz_chapter',
+    chapter = ChainedForeignKey(Chapters,
+                                chained_field="subject",
+                                chained_model_field="subject",
+                                show_all=False,
+                                on_delete=models.SET_NULL, related_name='quiz_chapter',
                                 null=True)  # manyTomany
     timer = models.CharField(choices=TimeChoices.timeChoices, max_length=255)
     created = models.DateTimeField(auto_now_add=True, )
@@ -187,12 +194,14 @@ class Quiz(models.Model):
         return self.name
 
     def get_questions(self):
-        questions = Question.objects.filter(quiz_id=self.id).order_by('?')[:self.q_num]
+        questions = Question.objects.filter(quiz_id=self.id).order_by('?')[:self.q_num].prefetch_related(
+            'choices_question')
 
         return questions
 
     def get_All_questions(self, subject, stage):
-        questions = Question.objects.filter(quiz__subject=subject, quiz__stage=stage).order_by('?')
+        questions = Question.objects.prefetch_related('choices_question').filter(quiz__subject=subject,
+                                                                                 quiz__stage=stage).order_by('?')
         # <QuerySet [<Question: ماهي علاقه المقاومه بلكهرباء>, <Question: ماهي علاقه عناصر الماء>, <Question: ماهي علاقه الهواء بلماء>, <Question: عرف الماء>]>
         return questions
 
@@ -208,10 +217,14 @@ class Question(models.Model):
     quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, related_name='question_quiz', null=True, blank=True)
     isProblem = models.BooleanField(default=False)
     image = models.ImageField(upload_to='images/', null=True, blank=True, )
+
     # extra = models.JSONField(default=dict, null=True, blank=True)
 
     def __str__(self):
         return "%s" % self.questionBody
+
+    def get_choices(self):
+        return self.choices_question.all().order_by('?')
 
 
 class choices(models.Model):
@@ -219,38 +232,66 @@ class choices(models.Model):
                                  blank=True)
     choiceBody = models.CharField(max_length=70, blank=True, null=True)
     isCorrect = models.BooleanField(default=False)
-    def __str__(self):
-        return str(self.id)
+    num = models.IntegerField(editable=False)
 
+    # def save(self, *args, **kwargs):
+    #     if self.pk == None:
+    #         self.id = choices.objects.filter(question=self.question).aggregate(max_id=Max("id")).get("max_id",0)
+    #
+    #     super().save(*args, **kwargs)  # Call the "real" save() method.
+    def save(self, *args, **kwargs):
+        try:
+            self.num = choices.objects.filter(question=self.question).latest('num').num + 1
+            print(self.num)
+            super().save(*args, **kwargs)
+        except:
+            self.num = '1'
+            super().save(*args, **kwargs)
+
+    def __str__(self):
+        return str(self.num)
 
 
 class UserQuizzes(models.Model):
     user = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, related_name='profile_userquizzes')
     created = models.DateTimeField(auto_now_add=True, )  # created from front
-    subject = models.ForeignKey(Subjects, on_delete=models.SET_NULL, related_name="subject_userquizzes", null=True)
-    chapter = models.ForeignKey(Chapters, on_delete=models.SET_NULL, related_name="chapter_userquizzes", null=True)
+    quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, related_name='User_quizzes', null=True, blank=True)
+    # subject = models.ForeignKey(Subjects, on_delete=models.SET_NULL, related_name="subject_userquizzes", null=True)
+    # chapter = models.ForeignKey(Chapters, on_delete=models.SET_NULL, related_name="chapter_userquizzes", null=True)
     score = models.IntegerField(default=0, editable=False)
-
-    def get(self):
-        get_created = self.created
-        get_subject = self.subject
-        get_chapter = self.chapter
-        get_score = self.score
-        return {
-            'created': get_created,
-            'subject': get_subject,
-            'chapter': get_chapter,
-            'score': get_score,
-        }
+    user_scoring = models.ForeignKey('UserScoring', on_delete=models.SET_NULL, null=True,
+                                     related_name='userquizzes_userscoring')
 
 
 class UserScoring(models.Model):
-    user = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, related_name='profile_scoring')
+    user = models.OneToOneField(Profile, on_delete=models.CASCADE, null=True, related_name='profile_scoring')
     total_score_points = models.IntegerField(default=0, editable=False)
-    total_right_choices = models.IntegerField(default=0, editable=False)
+    total_right_points = models.IntegerField(default=0, editable=False)
+
+    # user_quizzes=models.OneToOneField(UserQuizzes,on_delete=models.CASCADE)
+
+    @receiver(post_save, sender=UserQuizzes)
+    def update_or_create(sender, instance, **kwargs):
+        try:
+            us=UserScoring.objects.get(user=instance.user)
+            us.save()
+        except UserScoring.DoesNotExist:
+            p = Profile.objects.get(profile_userquizzes=instance)
+            UserScoring.objects.create(user=p)
+
+    def save(self, *args, **kwargs):
+        uq = UserQuizzes.objects.filter(user=self.user)
+        q = Quiz.objects.values('q_num').filter(User_quizzes__in=uq).annotate(total=Sum('q_num'))[0]['total']
+        self.total_score_points = (q*5)
+        self.total_right_points=uq.aggregate(score=Sum('score'))['score']
+        super().save(*args, **kwargs)
 
     def get_avg_score(self):
-        avg_score = self.total_right_choices / self.total_score_points
-        return str(avg_score * 100) + '%'
+        avg_score = self.total_right_points / self.total_score_points
+        return avg_score * 100
+    def get_total_quizzes(self):
+        uq = UserQuizzes.objects.filter(user=self.user)
+        q = Quiz.objects.values('q_num').filter(User_quizzes__in=uq).annotate(total=Count('id'))[0]['total']
+        return q
 
 # django_loger

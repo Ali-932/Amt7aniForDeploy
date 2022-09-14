@@ -1,7 +1,7 @@
 from django.db import models
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.utils import timezone
-
+#abstactbaseuser
 
 class EmailAccountManager(UserManager):
     def get_by_natural_key(self, username):

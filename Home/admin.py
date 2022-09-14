@@ -1,5 +1,6 @@
 from django.contrib import admin
 from django.contrib.admin import TabularInline, StackedInline, AdminSite
+from django.contrib.auth import get_user_model
 from django.db.models import Count
 from django.urls import reverse
 from django.utils.html import format_html
@@ -12,40 +13,40 @@ import Home
 from .models import Profile, Stage, Question, Chapters, Subjects, Quiz, UserQuizzes, choices
 from django import forms
 from super_inlines.admin import SuperInlineModelAdmin, SuperModelAdmin
+User = get_user_model()
 
 
 #
 
-# ADMIN_ORDERING = {
-#     "Home": [
-#         "Profile",
-#         "Stage",
-#         "Subjects",
-#         "Quiz",
-#         "Question",
-#         "UserQuizzes"
-#     ],
-# }
-#
-#
-# def get_app_list(self, request):
-#     app_dict = self._build_app_dict(request)
-#     for app_name, object_list in app_dict.items():
-#         if app_name in ADMIN_ORDERING:
-#             app = app_dict[app_name]
-#             app["models"].sort(
-#                 key=lambda x: ADMIN_ORDERING[app_name].index(x["object_name"])
-#             )
-#             app_dict[app_name]
-#             yield app
-#         else:
-#             yield app_dict[app_name]
-#
-#
-# admin.AdminSite.get_app_list = get_app_list
+ADMIN_ORDERING = {
+    "Home": [
+        "Profile",
+        "Stage",
+        "Subjects",
+        "Quiz",
+        "Question",
+        "UserQuizzes"
+    ],
+}
 
 
-# Register your models here.
+def get_app_list(self, request):
+    app_dict = self._build_app_dict(request)
+    for app_name, object_list in app_dict.items():
+        if app_name in ADMIN_ORDERING:
+            app = app_dict[app_name]
+            app["models"].sort(
+                key=lambda x: ADMIN_ORDERING[app_name].index(x["object_name"])
+            )
+            app_dict[app_name]
+            yield app
+        else:
+            yield app_dict[app_name]
+
+#
+admin.AdminSite.get_app_list = get_app_list
+
+
 
 @admin.register(Profile)
 class ClothesAdmin(admin.ModelAdmin):
@@ -62,7 +63,6 @@ class ClothesAdmin(admin.ModelAdmin):
     def show_average(self, obj):
 
         return obj.profile_userquizzes.get().get_avg_score()
-
     list_filter = ('user', 'created', 'modified','stage')
     search_fields = ('name',)
 
@@ -131,13 +131,6 @@ class QuizAdmin(NestedModelAdmin):
     list_filter = ('stage', 'subject', 'chapter')
     search_fields = ('name', 'chapter', 'stage')
     inlines = [QuestionInlineAdmin,]
-    # class Media:
-    #     # js = (
-    #     #     'smart-selects/admin/js/chainedfk.js',
-    #     #     'smart-selects/admin/js/chainedm2m.js',
-    #     #     'smart-selects/admin/js/bindfields.js'
-    #     # )
-    #     pass
 
     def view_questions_link(self, obj):
         count = obj.question_quiz.count()
@@ -162,6 +155,11 @@ class QuestionAdmin(NestedModelAdmin):
         'subject_name',
         'chapter_name'
     )
+    list_filter = ('quiz', 'isProblem',)
+
+    # def add_to_quiz_action(modeladmin,request, queryset):
+    #     quiz=Quiz.objects.get(question_quiz__in=queryset)
+    #     queryset.update(quiz=quiz)
     def subject_name(self,obj):
         if obj.quiz:
             return obj.quiz.subject.name
@@ -178,9 +176,8 @@ class QuestionAdmin(NestedModelAdmin):
             return obj.quiz.subject.stage.stages
         else: return None
 
-    subject_name.short_description = 'Subject name'
+    subject_name.short_description = 'stage name'
 
-    list_filter = ('quiz', 'isProblem')
 
 
 @admin.register(UserQuizzes)

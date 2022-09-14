@@ -9,11 +9,13 @@ User = get_user_model()
 class AuthBearer(HttpBearer):
     def authenticate(self, request, token):
         try:
+            print(token)
             user_email = jwt.decode(token=token, key=settings.SECRET_KEY, algorithms='HS256')
         except JWTError:
             return {'token': 'unauthorized'}
 
         if user_email:
+            print(user_email)
             return {'email': str(user_email['email'])}
 
 
@@ -22,3 +24,4 @@ def create_token_for_user(user):
     return {
         'access': str(token)
     }
+
