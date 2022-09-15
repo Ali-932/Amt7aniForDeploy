@@ -47,6 +47,8 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'silk',
     'rest_framework_simplejwt',
+    "debug_toolbar",
+
 ]
 SECURE_SSL_REDIRECT = False
 SITE_ID = 1
@@ -59,7 +61,7 @@ ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 
 # LOGIN_URL='emailC'
-# LOGIN_REDIRECT_URL='emailC'
+LOGIN_REDIRECT_URL='admin/'
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 
 ACCOUNT_EMAIL_CONFIRMATION_AUTHENTICATED_REDIRECT_URL='emailC'
@@ -74,6 +76,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'silk.middleware.SilkyMiddleware',
+    "debug_toolbar.middleware.DebugToolbarMiddleware",
 
 ]
 USE_DJANGO_JQUERY = True

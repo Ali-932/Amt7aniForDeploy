@@ -1,5 +1,6 @@
+from django.contrib.auth.base_user import AbstractBaseUser
 from django.db import models
-from django.contrib.auth.models import AbstractUser, UserManager
+from django.contrib.auth.models import AbstractUser, UserManager, PermissionsMixin
 from django.utils import timezone
 #abstactbaseuser
 
@@ -36,8 +37,15 @@ class EmailAccountManager(UserManager):
         return self.create_user(email,password,fullname, **other_fields)
 
 
+    # def create_staffuser(self, email, password, **other_fields):
+    #     other_fields['is_staff'] = True
+    #     other_fields['is_superuser'] = False
+    #     other_fields.setdefault('is_active', True)
+    #
+    #     return self.save_user(email, password, **other_fields)
 
-class EmailAccount(AbstractUser, models.Model):
+
+class EmailAccount(AbstractBaseUser, PermissionsMixin):
     username = models.NOT_PROVIDED
     email = models.EmailField('Email Address', unique=True)
     full_name = models.CharField(max_length=150, blank=True,null=True)
@@ -51,23 +59,3 @@ class EmailAccount(AbstractUser, models.Model):
 
     def __str__(self):
         return self.email
-
-'''class NewUser(AbstractBaseUser, PermissionsMixin):
-
-    email = models.EmailField(_('email address'), unique=True)
-    user_name = models.CharField(max_length=150, unique=True)
-    first_name = models.CharField(max_length=150, blank=True)
-    start_date = models.DateTimeField(default=timezone.now)
-    about = models.TextField(_(
-        'about'), max_length=500, blank=True)
-    is_staff = models.BooleanField(default=False)
-    is_active = models.BooleanField(default=False)
-
-    objects = CustomAccountManager()
-
-    USERNAME_FIELD = 'email'
-    REQUIRED_FIELDS = ['user_name', 'first_name']
-
-    def __str__(self):
-        return self.user_name
-'''

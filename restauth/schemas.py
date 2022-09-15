@@ -10,7 +10,7 @@ class AccountIn(Schema):
     password1: str = Field(min_length=9)
     password2: str = Field(min_length=9)
     gender:str
-    stage:str
+    stage:int
 
 
 class TokenOut(Schema):
@@ -18,8 +18,6 @@ class TokenOut(Schema):
 
 
 class AccountOut(Schema):
-    first_name: str
-    last_name: str
     email: EmailStr
 
 
@@ -31,7 +29,6 @@ class ResetPassword(Schema):
 
     password1: str = Field(min_length=9)
     password2: str = Field(min_length=9)
-    email: EmailStr
 
 class SigninIn(Schema):
     email: EmailStr
@@ -47,9 +44,6 @@ class ResetPasswordRequest(Schema):
 
 class TwoOTwo(Schema):
     detail: str
-
-
-
 
 class TwoOO(Schema):
     detail: str

@@ -1,7 +1,12 @@
+from typing import List
+
 from allauth.account.signals import email_confirmed
 from django.dispatch import receiver
+from email_validator import validate_email
 from ninja import Router
 from django.contrib.auth.password_validation import validate_password
+
+from Home.schemas import StagesOut
 from .schemas import FourOFourOut, TwoOTwo, ResetPasswordRequest, TwoOO, ResetPassword, FourOO, FourOThree, TokenOut
 from config import status
 from .authorization import create_token_for_user
@@ -19,6 +24,11 @@ User = get_user_model()
     201:TwoOO
 },auth=None)
 def signup(request, account_in: AccountIn):
+    try:
+        validate_email(account_in.email)
+    except ValidationError as e:
+        return status.BAD_REQUEST_400, {'detail': e}
+
     if account_in.password1 != account_in.password2:
         return status.BAD_REQUEST_400, {'detail': 'Passwords don\'t match'}
     try:
@@ -26,7 +36,7 @@ def signup(request, account_in: AccountIn):
     except exceptions.ValidationError as e:
         return status.BAD_REQUEST_400, {'detail': '{}'.format(e)}
     try:
-        st = Stage.objects.get(stages=account_in.stage)
+        st = Stage.objects.get(id=account_in.stage)
     except:
         return status.BAD_REQUEST_400, {'detail': 'stage does not exist'}
 
@@ -52,21 +62,28 @@ def signup(request, account_in: AccountIn):
             user = User.objects.get(email=email_address.email)
             user.is_active = True
             user.save()
-            Profile.objects.create(user=user,stage=st,gender='Male')
+            Profile.objects.create(user=user,stage=st,gender=account_in.gender,name=account_in.fullname)
             return status.CREATED_201, {'detail': 'user is created'}
 
 
 
         return status.ACCEPTED_202, {
             'detail': 'signed up successfully,check your email',
-            'account': new_user
         }
 
     return status.BAD_REQUEST_400, {'detail': 'Email is taken'}
 
-@auth_router.get('/get_stages',auth=None)
+@auth_router.get('/get_stages',response={
+    200:List[StagesOut],
+},auth=None)
 def get_stages(request):
-    return status.OK_200,{t[0]: t[1] for t in StageChoices.stages}
+    result=[]
+    for t in Stage.objects.all():
+        result.append({
+            'id':t.id,
+            'stage':t.stages
+                })
+    return status.OK_200, result
 @auth_router.get('/get_gender',auth=None)
 def get_stages(request):
     return status.OK_200,{t[0]: t[1] for t in Gender.gender}
@@ -99,7 +116,7 @@ def signin(request, signin_in: SigninIn):
         return status.NOT_FOUND_404, {'detail': 'User is not registered'}
 
 
-@auth_router.post('password_resert_request', response={
+@auth_router.post('password_reset_request', response={
     200: TokenOut,
     404: FourOFourOut,
     202: TwoOTwo,
@@ -133,7 +150,7 @@ def reset_password_request(request, pass_reset: ResetPasswordRequest):
 })
 def reset_password(request, pass_reset: ResetPassword):
     try:
-        user = User.objects.get(email=pass_reset.email)
+        user = User.objects.get(email=request.auth['user_email'])
     except User.DoesNotExist:
         return status.NOT_FOUND_404, {'detail': 'User is not registered'}
     else:
@@ -151,3 +168,4 @@ def reset_password(request, pass_reset: ResetPassword):
         user.save()
         return status.OK_200, {'detail': 'Password changed'}
 
+#check password

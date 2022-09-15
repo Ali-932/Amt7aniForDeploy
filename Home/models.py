@@ -93,7 +93,7 @@ class StageType():
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.PROTECT)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     name = models.CharField(max_length=35)
     gender = models.CharField(max_length=255, choices=Gender.gender)
     created = models.DateTimeField(auto_now_add=True, )
@@ -101,10 +101,10 @@ class Profile(models.Model):
     id = models.AutoField(primary_key=True, )
     stage = models.ForeignKey("Stage", on_delete=models.SET_NULL, null=True, blank=True, related_name="profile_stage")
 
-    def Update_profile(self, name, gender, stage, ):
+    def Update_profile(self, name, gender, stage_id, ):
         self.name = name
         self.gender = gender
-        new_stage = Stage.objects.get(stages=stage)
+        new_stage = Stage.objects.get(id=stage_id)
         self.stage = new_stage
         self.save()
 
@@ -155,8 +155,8 @@ class Subjects(models.Model):
     def __str__(self):
         return self.name
 
-    def get_chapters(self):  # new
-        return Chapters.objects.filter(subject=self)
+    def get_quizzes_count(self):  # new
+        return Quiz.objects.filter(subject=self).aggregate(total=Count('id'))['total']
         # <QuerySet [<Chapters: فصل اول>, <Chapters: فصل ثاني>]>
 
 
@@ -170,6 +170,12 @@ class Chapters(models.Model):
     class Meta:
         verbose_name = 'Chapter'
         verbose_name_plural = 'Chapters'
+    # @receiver(post_save, sender=Subjects)
+    # def quiz_all(sender, instance, **kwargs):
+    #     try:
+    #         Quiz.objects.get(name='ALLQ932',subject=instance)
+    #     except Quiz.DoesNotExist:
+    #         Quiz.objects.create(subject=instance,stage=instance.stage,name='ALLQ932')
 
 
 class Quiz(models.Model):
@@ -190,15 +196,20 @@ class Quiz(models.Model):
     created = models.DateTimeField(auto_now_add=True, )
     q_num = models.IntegerField(default=0)  # change to 10 after questions are set
 
+
+    class Meta:
+        unique_together = ("subject", "chapter",'stage')
+
+
     def __str__(self):
         return self.name
 
     def get_questions(self):
-        questions = Question.objects.filter(quiz_id=self.id).order_by('?')[:self.q_num].prefetch_related(
-            'choices_question')
-
+        questions = Question.objects.filter(quiz_id=self.id).order_by('?')[:self.q_num]
         return questions
-
+    def get_questions_count(self):
+        count=Question.objects.filter(quiz_id=self.id).aggregate(count=Count('id'))['count']
+        return count
     def get_All_questions(self, subject, stage):
         questions = Question.objects.prefetch_related('choices_question').filter(quiz__subject=subject,
                                                                                  quiz__stage=stage).order_by('?')
@@ -208,17 +219,9 @@ class Quiz(models.Model):
 
 class Question(models.Model):
     questionBody = models.CharField(max_length=255, blank=True, null=True)
-    # ChoiceA = models.CharField(max_length=255, blank=True, null=True)
-    # a_isTure = models.BooleanField(default=False)
-    # ChoiceB = models.CharField(max_length=255, blank=True, null=True)
-    # b_isTure = models.BooleanField(default=False)
-    # ChoiceC = models.CharField(max_length=255, blank=True, null=True)
-    # c_isTure = models.BooleanField(default=False)
     quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, related_name='question_quiz', null=True, blank=True)
     isProblem = models.BooleanField(default=False)
     image = models.ImageField(upload_to='images/', null=True, blank=True, )
-
-    # extra = models.JSONField(default=dict, null=True, blank=True)
 
     def __str__(self):
         return "%s" % self.questionBody
@@ -228,7 +231,7 @@ class Question(models.Model):
 
 
 class choices(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.SET_NULL, related_name='choices_question', null=True,
+    question = models.ForeignKey(Question, on_delete=models.SET_NULL, related_name='choices_question',related_query_name='choices_query', null=True,
                                  blank=True)
     choiceBody = models.CharField(max_length=70, blank=True, null=True)
     isCorrect = models.BooleanField(default=False)
@@ -268,7 +271,6 @@ class UserScoring(models.Model):
     total_score_points = models.IntegerField(default=0, editable=False)
     total_right_points = models.IntegerField(default=0, editable=False)
 
-    # user_quizzes=models.OneToOneField(UserQuizzes,on_delete=models.CASCADE)
 
     @receiver(post_save, sender=UserQuizzes)
     def update_or_create(sender, instance, **kwargs):
