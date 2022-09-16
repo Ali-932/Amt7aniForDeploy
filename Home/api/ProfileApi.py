@@ -20,7 +20,7 @@ def update_profile(request, updated_info:Profileinfo):
     except:
         return status.BAD_REQUEST_400,{'detail':'something went wrong'}
 
-@profile_router.post('/profile_info',response={
+@profile_router.get('/profile_info',response={
     200:Profileinfo,
     404:FourOFourOut
 })

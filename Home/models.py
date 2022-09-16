@@ -1,7 +1,6 @@
-
 from django.db import models
 from django.contrib.auth import get_user_model
-from django.db.models import  Sum, Count
+from django.db.models import Sum, Count
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from smart_selects.db_fields import ChainedForeignKey, ChainedManyToManyField
@@ -164,6 +163,13 @@ class Chapters(models.Model):
     name = models.CharField(max_length=255, blank=True)
     subject = models.ForeignKey(Subjects, on_delete=models.CASCADE, related_name='chapter_subject', null=True)
 
+
+
+    def get_All_questions(self, subject, stage):
+        questions = Question.objects.prefetch_related('choices_question').filter(quiz__subject=subject,
+                                                                                 quiz__stage=stage).order_by('?')
+        return questions
+
     def __str__(self):
         return self.name
 
@@ -179,7 +185,7 @@ class Chapters(models.Model):
 
 
 class Quiz(models.Model):
-    name = models.CharField(max_length=255, null=True, blank=True)
+    name = models.CharField(max_length=255)
     stage = models.ForeignKey(Stage, on_delete=models.SET_NULL, null=True, related_name='quiz_stage')
     subject = ChainedForeignKey(Subjects,
                                 chained_field="stage",
@@ -187,42 +193,52 @@ class Quiz(models.Model):
                                 show_all=False,
                                 on_delete=models.SET_NULL, null=True, related_name='quiz_subject')
     chapter = ChainedManyToManyField(Chapters,
-                                chained_field="subject",
-                                chained_model_field="subject",
-                                horizontal=True,
-                                verbose_name='chapters',
-                        )
-                                # null=True)  # manyTomany
+                                     chained_field="subject",
+                                     chained_model_field="subject",
+                                     horizontal=True,
+                                     verbose_name='chapters',
+                                     )
+    # null=True)  # manyTomany
     timer = models.CharField(choices=TimeChoices.timeChoices, max_length=255)
     created = models.DateTimeField(auto_now_add=True, )
     q_num = models.IntegerField(default=0)  # change to 10 after questions are set
 
+    @receiver(post_save, sender=Chapters)
+    def quiz_all(sender, instance, **kwargs):
+        try:
+            q = Quiz.objects.get(name='شامل', subject=instance.subject,stage=instance.subject.stage)
+            ch = Chapters.objects.filter(subject__stage=instance.subject.stage, subject=instance.subject)
+            q.chapter.set(ch)
+            q.save()
+        except Quiz.DoesNotExist:
+            q = Quiz.objects.create(subject=instance.subject, stage=instance.subject.stage, name='شامل',timer=TimeChoices.min_60,q_num=100)
+            ch = Chapters.objects.filter(subject__stage=instance.subject.stage, subject=instance.subject)
+            q.chapter.set(ch)
+            q.save()
 
-    class Meta:
-        unique_together = ("subject",
-                           # "chapter",
-                           'stage')
+    def get_questions(self):
+        ch=Chapters.objects.filter(quiz=self)
+        questions = Question.objects.filter(chapter__in=ch).order_by('?')[:self.q_num]
+        return questions
+    def get_questions_count(self):
+        ch=Chapters.objects.filter(quiz=self)
+        count = Question.objects.filter(chapter__in=ch).aggregate(count=Count('id'))['count']
+        print(count)
+        return count
 
+    # class Meta:
+    #     unique_together = ("subject",
+    #                        # "chapter",
+    #                        'stage')
 
     def __str__(self):
         return self.name
 
-    def get_questions(self):
-        questions = Question.objects.filter(quiz_id=self.id).order_by('?')[:self.q_num]
-        return questions
-    def get_questions_count(self):
-        count=Question.objects.filter(quiz_id=self.id).aggregate(count=Count('id'))['count']
-        return count
-    def get_All_questions(self, subject, stage):
-        questions = Question.objects.prefetch_related('choices_question').filter(quiz__subject=subject,
-                                                                                 quiz__stage=stage).order_by('?')
-        # <QuerySet [<Question: ماهي علاقه المقاومه بلكهرباء>, <Question: ماهي علاقه عناصر الماء>, <Question: ماهي علاقه الهواء بلماء>, <Question: عرف الماء>]>
-        return questions
-
 
 class Question(models.Model):
     questionBody = models.CharField(max_length=255, blank=True, null=True)
-    quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, related_name='question_quiz', null=True, blank=True)
+    chapter = models.ForeignKey(Chapters, on_delete=models.SET_NULL, related_name='question_chapter', null=True,
+                                blank=True)
     isProblem = models.BooleanField(default=False)
     image = models.ImageField(upload_to='images/', null=True, blank=True, )
 
@@ -234,7 +250,8 @@ class Question(models.Model):
 
 
 class choices(models.Model):
-    question = models.ForeignKey(Question, on_delete=models.SET_NULL, related_name='choices_question',related_query_name='choices_query', null=True,
+    question = models.ForeignKey(Question, on_delete=models.SET_NULL, related_name='choices_question',
+                                 related_query_name='choices_query', null=True,
                                  blank=True)
     choiceBody = models.CharField(max_length=70, blank=True, null=True)
     isCorrect = models.BooleanField(default=False)
@@ -268,17 +285,20 @@ class UserQuizzes(models.Model):
     user_scoring = models.ForeignKey('UserScoring', on_delete=models.SET_NULL, null=True,
                                      related_name='userquizzes_userscoring')
 
+    def get_chapter(self):
+        ch=Chapters.objects.filter(quiz=self.quiz).values_list('name',flat=True)
+
+        return ch
 
 class UserScoring(models.Model):
     user = models.OneToOneField(Profile, on_delete=models.CASCADE, null=True, related_name='profile_scoring')
     total_score_points = models.IntegerField(default=0, editable=False)
     total_right_points = models.IntegerField(default=0, editable=False)
 
-
     @receiver(post_save, sender=UserQuizzes)
     def update_or_create(sender, instance, **kwargs):
         try:
-            us=UserScoring.objects.get(user=instance.user)
+            us = UserScoring.objects.get(user=instance.user)
             us.save()
         except UserScoring.DoesNotExist:
             p = Profile.objects.get(profile_userquizzes=instance)
@@ -287,13 +307,14 @@ class UserScoring(models.Model):
     def save(self, *args, **kwargs):
         uq = UserQuizzes.objects.filter(user=self.user)
         q = Quiz.objects.values('q_num').filter(User_quizzes__in=uq).annotate(total=Sum('q_num'))[0]['total']
-        self.total_score_points = (q*5)
-        self.total_right_points=uq.aggregate(score=Sum('score'))['score']
+        self.total_score_points = (q * 5)
+        self.total_right_points = uq.aggregate(score=Sum('score'))['score']
         super().save(*args, **kwargs)
 
     def get_avg_score(self):
         avg_score = self.total_right_points / self.total_score_points
         return avg_score * 100
+
     def get_total_quizzes(self):
         uq = UserQuizzes.objects.filter(user=self.user)
         q = Quiz.objects.values('q_num').filter(User_quizzes__in=uq).annotate(total=Count('id'))[0]['total']

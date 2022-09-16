@@ -20,10 +20,10 @@ ADMIN_ORDERING = {
         "Profile",
         "Stage",
         "Subjects",
-        "Quiz",
+        "Chapters",
         "Question",
+        "Quiz",
         "UserQuizzes",
-        "Chapters"
     ],
 }
 
@@ -45,9 +45,6 @@ def get_app_list(self, request):
 admin.AdminSite.get_app_list = get_app_list
 
 
-@admin.register(Chapters)
-class Chapteradmin(admin.ModelAdmin):
-    pass
 
 @admin.register(Profile)
 class ClothesAdmin(admin.ModelAdmin):
@@ -93,11 +90,6 @@ class ChapterInLine(admin.TabularInline):
     extra = 0
 
 #event_listener
-# @admin.register(Chapters)
-# class ch(admin.ModelAdmin):
-#     list_display = ('id', 'name', 'subject')
-#     list_filter = ('subject','stage')
-#     search_fields = ('name',)
 
 @admin.register(Subjects)
 class SubjectsAdmin(admin.ModelAdmin):
@@ -128,29 +120,28 @@ class QuestionInlineAdmin(NestedStackedInline):
     extra = 0
     inlines = [ChoiceInlineAdmin]
 
+
 @admin.register(Quiz)
-class QuizAdmin(NestedModelAdmin):
+class QuizAdmin(admin.ModelAdmin):
     list_display = ('id', 'name', 'stage', 'subject'
                     # ,'chapter'
-                    , 'timer','view_questions_link')
+                    , 'timer'
+                     ,'view_chapters_link'
+                    )
     list_filter = ('stage', 'subject', 'chapter')
     search_fields = ('name', 'chapter', 'stage')
-    inlines = [QuestionInlineAdmin,]
-    # def get_queryset(self, request):
-    #     qs = super(QuizAdmin, self).get_queryset(request)
-    #     return qs.exclude(name="ALLQ932")
 
 
-    def view_questions_link(self, obj):
-        count = obj.question_quiz.count()
+    def view_chapters_link(self, obj):
+        count=Chapters.objects.filter(quiz=obj).count()
         url = (
-                reverse("admin:Home_question_changelist")
+                reverse("admin:Home_chapters_changelist")
                 + "?"
-                + urlencode({"quiz__id": f"{obj.id}"})
+                + urlencode({"chapters__id": f"{obj.id}"})
         )
         return format_html('<a href="{}">{}</a>', url, count)
 
-    view_questions_link.short_description = "questions"
+    view_chapters_link.short_description = "chapters"
 
 @admin.register(Question)
 class QuestionAdmin(NestedModelAdmin):
@@ -158,32 +149,40 @@ class QuestionAdmin(NestedModelAdmin):
     list_display = (
         'id',
         'questionBody',
-        'quiz',
+        'chapter',
         'isProblem',
         'stage_name',
         'subject_name',
         'chapter_name'
     )
-    list_filter = ('quiz', 'isProblem',)
-
-    # def add_to_quiz_action(modeladmin,request, queryset):
-    #     quiz=Quiz.objects.get(question_quiz__in=queryset)
-    #     queryset.update(quiz=quiz)
+    list_filter = ( 'isProblem',)
     def subject_name(self,obj):
-        if obj.quiz:
-            return obj.quiz.subject.name
+        if obj.chapter:
+            return obj.chapter.subject.name
         else: return None
-    subject_name.short_description = 'Subject name'
+    subject_name.short_description = 'Subject'
     def chapter_name(self,obj):
-        if obj.quiz:
-            return obj.quiz.chapter.name
+        if obj.chapter:
+            return obj.chapter.name
         else: return None
 
-    subject_name.short_description = 'Subject name'
+    chapter_name.short_description = 'chapter '
     def stage_name(self,obj):
-        if obj.quiz:
-            return obj.quiz.subject.stage.stages
+        if obj.chapter:
+            return obj.chapter.subject.stage.stages
         else: return None
 
-    subject_name.short_description = 'stage name'
+    stage_name.short_description = 'stage '
 
+@admin.register(Chapters)
+class ch(NestedModelAdmin):
+    list_display = ('id', 'name', 'subject','stage_name')
+    list_filter = ('subject',)
+    search_fields = ('name',)
+    inlines = [QuestionInlineAdmin,]
+    def stage_name(self,obj):
+        if obj.subject:
+            return obj.subject.stage.stages
+        else: return None
+
+    stage_name.short_description = 'stage '
