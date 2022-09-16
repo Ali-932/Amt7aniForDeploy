@@ -4,7 +4,7 @@ from django.contrib.auth import get_user_model
 from django.db.models import  Sum, Count
 from django.db.models.signals import post_save
 from django.dispatch import receiver
-from smart_selects.db_fields import ChainedForeignKey
+from smart_selects.db_fields import ChainedForeignKey, ChainedManyToManyField
 
 User = get_user_model()
 
@@ -186,19 +186,22 @@ class Quiz(models.Model):
                                 chained_model_field="stage",
                                 show_all=False,
                                 on_delete=models.SET_NULL, null=True, related_name='quiz_subject')
-    chapter = ChainedForeignKey(Chapters,
+    chapter = ChainedManyToManyField(Chapters,
                                 chained_field="subject",
                                 chained_model_field="subject",
-                                show_all=False,
-                                on_delete=models.SET_NULL, related_name='quiz_chapter',
-                                null=True)  # manyTomany
+                                horizontal=True,
+                                verbose_name='chapters',
+                        )
+                                # null=True)  # manyTomany
     timer = models.CharField(choices=TimeChoices.timeChoices, max_length=255)
     created = models.DateTimeField(auto_now_add=True, )
     q_num = models.IntegerField(default=0)  # change to 10 after questions are set
 
 
     class Meta:
-        unique_together = ("subject", "chapter",'stage')
+        unique_together = ("subject",
+                           # "chapter",
+                           'stage')
 
 
     def __str__(self):

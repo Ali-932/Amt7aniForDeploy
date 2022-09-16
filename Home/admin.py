@@ -130,7 +130,9 @@ class QuestionInlineAdmin(NestedStackedInline):
 
 @admin.register(Quiz)
 class QuizAdmin(NestedModelAdmin):
-    list_display = ('id', 'name', 'stage', 'subject', 'chapter', 'timer','view_questions_link')
+    list_display = ('id', 'name', 'stage', 'subject'
+                    # ,'chapter'
+                    , 'timer','view_questions_link')
     list_filter = ('stage', 'subject', 'chapter')
     search_fields = ('name', 'chapter', 'stage')
     inlines = [QuestionInlineAdmin,]
