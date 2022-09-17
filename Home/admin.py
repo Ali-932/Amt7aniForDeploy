@@ -85,7 +85,7 @@ class StageAdmin(SuperModelAdmin):
     view_students_link.short_description = "Students"
 
 
-class ChapterInLine(admin.TabularInline):
+class ChapterInLine(admin.StackedInline):
     model = Chapters
     extra = 0
 
@@ -153,7 +153,6 @@ class QuestionAdmin(NestedModelAdmin):
         'isProblem',
         'stage_name',
         'subject_name',
-        'chapter_name'
     )
     list_filter = ( 'isProblem',)
     def subject_name(self,obj):
@@ -161,12 +160,17 @@ class QuestionAdmin(NestedModelAdmin):
             return obj.chapter.subject.name
         else: return None
     subject_name.short_description = 'Subject'
-    def chapter_name(self,obj):
-        if obj.chapter:
-            return obj.chapter.name
-        else: return None
+    # def chapter_name(self,obj):
+    #     if obj.chapter:
+    #         o=obj.chapter.subject.quiz_subject
+    #         a=''
+    #         for i in o:
+    #             a+=(i.name+',')
+    #         print(a)
+    #         return a
+    #     else: return None
 
-    chapter_name.short_description = 'chapter '
+    # chapter_name.short_description = 'quiz'
     def stage_name(self,obj):
         if obj.chapter:
             return obj.chapter.subject.stage.stages

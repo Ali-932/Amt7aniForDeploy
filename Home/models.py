@@ -280,7 +280,7 @@ class UserQuizzes(models.Model):
     created = models.DateTimeField(auto_now_add=True, )  # created from front
     quiz = models.ForeignKey(Quiz, on_delete=models.SET_NULL, related_name='User_quizzes', null=True, blank=True)
     # subject = models.ForeignKey(Subjects, on_delete=models.SET_NULL, related_name="subject_userquizzes", null=True)
-    # chapter = models.ForeignKey(Chapters, on_delete=models.SET_NULL, related_name="chapter_userquizzes", null=True)
+    # chapter = models.ForeignKey(Chapters, on_delete=models.SET_NULL, related_name="chapter_userquizzes", null=True)ني
     score = models.IntegerField(default=0, editable=False)
     user_scoring = models.ForeignKey('UserScoring', on_delete=models.SET_NULL, null=True,
                                      related_name='userquizzes_userscoring')
