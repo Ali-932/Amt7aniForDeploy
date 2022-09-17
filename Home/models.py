@@ -138,7 +138,7 @@ class Stage(models.Model):
         unique_together = ("stages", "type",)
 
     def get_subjects(self):  # new
-        return Subjects.objects.filter(stage=self)
+        return Subjects.objects.select_related('stage').filter(stage=self)
 
 
 class Subjects(models.Model):
