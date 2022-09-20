@@ -20,10 +20,20 @@ class TokenOut(Schema):
 class AccountOut(Schema):
     email: EmailStr
 
+class StageOut(Schema):
+    stages: str
+    type: str
+    id:int
 
+class ProfileOut(Schema):
+    name:str
+    gender:str
+    stage:StageOut
+    id:int
 class AuthOut(Schema):
     token: TokenOut
     account: AccountOut
+    profile_out: ProfileOut
 
 class ResetPassword(Schema):
 
@@ -41,7 +51,9 @@ class FourOFourOut(Schema):
 class ResetPasswordRequest(Schema):
     email: EmailStr
 
-
+class Codein(Schema):
+    code:str
+    email:EmailStr
 class TwoOTwo(Schema):
     detail: str
 

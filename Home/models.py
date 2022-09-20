@@ -92,7 +92,7 @@ class StageType():
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE,related_name='user_profile')
     name = models.CharField(max_length=35)
     gender = models.CharField(max_length=255, choices=Gender.gender)
     created = models.DateTimeField(auto_now_add=True, )

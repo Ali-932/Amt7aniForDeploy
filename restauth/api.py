@@ -1,33 +1,40 @@
+import string
+import random
 from typing import List
 
 from allauth.account.signals import email_confirmed
+from django.core.mail import send_mail
 from django.dispatch import receiver
 from email_validator import validate_email
 from ninja import Router
 from django.contrib.auth.password_validation import validate_password
 
 from Home.schemas import StagesOut
-from .schemas import FourOFourOut, TwoOTwo, ResetPasswordRequest, TwoOO, ResetPassword, FourOO, FourOThree, TokenOut
+from .schemas import FourOFourOut, TwoOTwo, ResetPasswordRequest, TwoOO, ResetPassword, FourOO, FourOThree, TokenOut, \
+    Codein
 from config import status
 from .authorization import create_token_for_user
 from .schemas import AccountIn, AuthOut, SigninIn
 from django.core import exceptions
 from allauth.account.utils import *
-from Home.models import Profile, Stage,StageChoices,Gender
+from Home.models import Profile, Stage, StageChoices, Gender
 
 auth_router = Router(tags=['auth'])
 User = get_user_model()
 
+
 @auth_router.post('signup', response={
     400: FourOFourOut,
     202: TwoOTwo,
-    201:TwoOO
-},auth=None)
+}, auth=None)
 def signup(request, account_in: AccountIn):
     try:
         validate_email(account_in.email)
     except ValidationError as e:
         return status.BAD_REQUEST_400, {'detail': e}
+    except :
+        return status.BAD_REQUEST_400, {'detail': 'email not valid'}
+
 
     if account_in.password1 != account_in.password2:
         return status.BAD_REQUEST_400, {'detail': 'Passwords don\'t match'}
@@ -62,10 +69,7 @@ def signup(request, account_in: AccountIn):
             user = User.objects.get(email=email_address.email)
             user.is_active = True
             user.save()
-            Profile.objects.create(user=user,stage=st,gender=account_in.gender,name=account_in.fullname)
-            return status.CREATED_201, {'detail': 'user is created'}
-
-
+            Profile.objects.create(user=user, stage=st, gender=account_in.gender, name=account_in.fullname)
 
         return status.ACCEPTED_202, {
             'detail': 'signed up successfully,check your email',
@@ -73,26 +77,30 @@ def signup(request, account_in: AccountIn):
 
     return status.BAD_REQUEST_400, {'detail': 'Email is taken'}
 
-@auth_router.get('/get_stages',response={
-    200:List[StagesOut],
-},auth=None)
+
+@auth_router.get('/get_stages', response={
+    200: List[StagesOut],
+}, auth=None)
 def get_stages(request):
-    result=[]
+    result = []
     for t in Stage.objects.all():
         result.append({
-            'id':t.id,
-            'stage':t.stages
-                })
+            'id': t.id,
+            'stage': t.stages
+        })
     return status.OK_200, result
-@auth_router.get('/get_gender',auth=None)
+
+
+@auth_router.get('/get_gender', auth=None)
 def get_stages(request):
-    return status.OK_200,{t[0]: t[1] for t in Gender.gender}
+    return status.OK_200, {t[0]: t[1] for t in Gender.gender}
+
 
 @auth_router.post('signin', response={
     200: AuthOut,
     404: FourOFourOut,
     403: FourOThree
-},auth=None)
+}, auth=None)
 def signin(request, signin_in: SigninIn):
     try:
         user = User.objects.get(email=signin_in.email)
@@ -107,7 +115,8 @@ def signin(request, signin_in: SigninIn):
             token = create_token_for_user(user)
             return status.OK_200, {
                 'token': token,
-                'account': user
+                'account': user,
+                'profile_out': user.user_profile
             }
         else:
             return status.FORBIDDEN_403, {'detail': 'password is not correct '}
@@ -117,11 +126,10 @@ def signin(request, signin_in: SigninIn):
 
 
 @auth_router.post('password_reset_request', response={
-    200: TokenOut,
     404: FourOFourOut,
     202: TwoOTwo,
     403: FourOThree
-},auth=None)
+}, auth=None)
 def reset_password_request(request, pass_reset: ResetPasswordRequest):
     try:
         user = User.objects.get(email=pass_reset.email)
@@ -130,16 +138,41 @@ def reset_password_request(request, pass_reset: ResetPasswordRequest):
     else:
         if user.is_active == False:
             return status.FORBIDDEN_403, {'detail': 'Email is not activated '}
+        characters = string.ascii_letters + string.digits
+        code = ''.join(random.choice(characters) for _ in range(5))
+        user.code = code
+        user.save()
+        # try:
+        send_mail(
+            'Password resert',
+            f'your code is {code}.',
+            None,
+            [pass_reset.email],
+            fail_silently=False,
+        )
 
-        send_email_confirmation(request, user, True)
 
-        @receiver(email_confirmed)
-        def email_confirmed1(request, email_address, **kwargs):
+        return status.ACCEPTED_202, {'detail': 'code sent'}
+
+
+@auth_router.post('/check_code', response={
+    200: TokenOut,
+    403: FourOThree,
+    400: FourOO
+}, auth=None)
+def check_code(request, code: Codein):
+    try:
+        user = User.objects.get(email=code.email)
+        if user.is_active == False:
+            return status.FORBIDDEN_403, {'detail': 'Email is not activated '}
+        if user.code == code.code:
+            user.code = None
             token = create_token_for_user(user)
-            print(token)
-            return status.OK_200, {'access': token}#need token
-
-        return status.ACCEPTED_202, {'detail': 'email sent'}
+            return status.OK_200, {'access': token['access']}
+        else:
+            return status.BAD_REQUEST_400, {'detail': 'code does not match'}
+    except:
+        return status.NOT_FOUND_404, {'detail': 'user not found '}
 
 
 @auth_router.put('/set_new_password', response={
@@ -168,4 +201,4 @@ def reset_password(request, pass_reset: ResetPassword):
         user.save()
         return status.OK_200, {'detail': 'Password changed'}
 
-#check password
+# check password

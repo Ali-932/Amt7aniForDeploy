@@ -14,7 +14,7 @@ api = NinjaAPI(
     title='Amt7ani',
     version='0.2',
     description='Amt7ani api.',
-    csrf=True,
+    # csrf=True,
     auth=AuthBearer()
 )
 api.add_router('auth/', auth_router)

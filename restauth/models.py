@@ -52,6 +52,7 @@ class EmailAccount(AbstractBaseUser, PermissionsMixin):
     start_date = models.DateTimeField(default=timezone.now)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=False)
+    code=models.CharField(max_length=150, blank=True,null=True)
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = []
 
