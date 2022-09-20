@@ -14,7 +14,7 @@ Requires core.js and SelectBox.js.
             }
             const from_box = document.getElementById(field_id);
             from_box.id += '_from'; // change its ID
-            from_box.className = 'filtered';
+            from_box.className = 'filtered form-control';
 
             for (const p of from_box.parentNode.getElementsByTagName('p')) {
                 if (p.classList.contains("info")) {
@@ -30,12 +30,12 @@ Requires core.js and SelectBox.js.
 
             // <div class="selector"> or <div class="selector stacked">
             const selector_div = quickElement('div', from_box.parentNode);
-            selector_div.className = is_stacked ? 'selector stacked' : 'selector';
+            selector_div.className = is_stacked ? 'selector row stacked' : 'selector row';
 
             // <div class="selector-available">
             const selector_available = quickElement('div', selector_div);
-            selector_available.className = 'selector-available';
-            const title_available = quickElement('h2', selector_available, interpolate(gettext('Available %s') + ' ', [field_name]));
+            selector_available.className = 'selector-available col-sm-12 col-lg-5';
+            const title_available = quickElement('h5', selector_available, interpolate(gettext('Available %s') + ' ', [field_name]));
             quickElement(
                 'span', title_available, '',
                 'class', 'help help-tooltip help-icon',
@@ -50,19 +50,12 @@ Requires core.js and SelectBox.js.
             );
 
             const filter_p = quickElement('p', selector_available, '', 'id', field_id + '_filter');
-            filter_p.className = 'selector-filter';
-
-            const search_filter_label = quickElement('label', filter_p, '', 'for', field_id + '_input');
-
-            quickElement(
-                'span', search_filter_label, '',
-                'class', 'help-tooltip search-label-icon',
-                'title', interpolate(gettext("Type into this box to filter down the list of available %s."), [field_name])
-            );
+            filter_p.className = 'selector-filter px-0';
 
             filter_p.appendChild(document.createTextNode(' '));
 
             const filter_input = quickElement('input', filter_p, '', 'type', 'text', 'placeholder', gettext("Filter"));
+            filter_input.className = 'form-control px-2 m-0';
             filter_input.id = field_id + '_input';
 
             selector_available.appendChild(from_box);
@@ -70,17 +63,19 @@ Requires core.js and SelectBox.js.
             choose_all.className = 'selector-chooseall';
 
             // <ul class="selector-chooser">
-            const selector_chooser = quickElement('ul', selector_div);
-            selector_chooser.className = 'selector-chooser';
-            const add_link = quickElement('a', quickElement('li', selector_chooser), gettext('Choose'), 'title', gettext('Choose'), 'href', '#', 'id', field_id + '_add_link');
-            add_link.className = 'selector-add';
-            const remove_link = quickElement('a', quickElement('li', selector_chooser), gettext('Remove'), 'title', gettext('Remove'), 'href', '#', 'id', field_id + '_remove_link');
+            const selector_chooser = quickElement('div', selector_div);
+            selector_chooser.className = 'selector-chooser col-sm-12 col-lg-auto row justify-content-center align-items-center';
+
+            const remove_link = quickElement('a', quickElement('div', selector_chooser), gettext('Remove'), 'title', gettext('Remove'), 'href', '#', 'id', field_id + '_remove_link');
             remove_link.className = 'selector-remove';
+
+            const add_link = quickElement('a', quickElement('div', selector_chooser), gettext('Choose'), 'title', gettext('Choose'), 'href', '#', 'id', field_id + '_add_link');
+            add_link.className = 'selector-add';
 
             // <div class="selector-chosen">
             const selector_chosen = quickElement('div', selector_div);
-            selector_chosen.className = 'selector-chosen';
-            const title_chosen = quickElement('h2', selector_chosen, interpolate(gettext('Chosen %s') + ' ', [field_name]));
+            selector_chosen.className = 'selector-chosen col-sm-12 col-lg-5';
+            const title_chosen = quickElement('h5', selector_chosen, interpolate(gettext('Chosen %s') + ' ', [field_name]));
             quickElement(
                 'span', title_chosen, '',
                 'class', 'help help-tooltip help-icon',
@@ -95,7 +90,7 @@ Requires core.js and SelectBox.js.
             );
 
             const to_box = quickElement('select', selector_chosen, '', 'id', field_id + '_to', 'multiple', '', 'size', from_box.size, 'name', from_box.name);
-            to_box.className = 'filtered';
+            to_box.className = 'filtered form-control';
             const clear_all = quickElement('a', selector_chosen, gettext('Remove all'), 'title', interpolate(gettext('Click to remove all chosen %s at once.'), [field_name]), 'href', '#', 'id', field_id + '_remove_all_link');
             clear_all.className = 'selector-clearall';
 

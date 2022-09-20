@@ -24,7 +24,7 @@
         calendarLinkName: 'calendarlink', // name of the link that is used to toggle
         clockDivName: 'clockbox', // name of clock <div> that gets toggled
         clockLinkName: 'clocklink', // name of the link that is used to toggle
-        shortCutsClass: 'datetimeshortcuts', // class of the clock and cal shortcuts
+        shortCutsClass: 'datetimeshortcuts input-group-append', // class of the clock and cal shortcuts
         timezoneWarningClass: 'timezonewarning', // class of the warning for timezone mismatch
         timezoneOffset: 0,
         init: function() {
@@ -33,15 +33,20 @@
                 const localOffset = new Date().getTimezoneOffset() * -60;
                 DateTimeShortcuts.timezoneOffset = localOffset - serverOffset;
             }
-
             for (const inp of document.getElementsByTagName('input')) {
                 if (inp.type === 'text' && inp.classList.contains('vTimeField')) {
-                    DateTimeShortcuts.addClock(inp);
-                    DateTimeShortcuts.addTimezoneWarning(inp);
+                    parent = inp.parentNode
+                    if(parent.querySelectorAll('.datetimeshortcuts').length==0){
+                        DateTimeShortcuts.addClock(inp);
+                        DateTimeShortcuts.addTimezoneWarning(inp);
+                    }
                 }
                 else if (inp.type === 'text' && inp.classList.contains('vDateField')) {
-                    DateTimeShortcuts.addCalendar(inp);
-                    DateTimeShortcuts.addTimezoneWarning(inp);
+                    parent = inp.parentNode
+                    if(parent.querySelectorAll('.datetimeshortcuts').length==0){
+                        DateTimeShortcuts.addCalendar(inp);
+                        DateTimeShortcuts.addTimezoneWarning(inp);
+                    }
                 }
             }
         },
@@ -68,7 +73,8 @@
             }
 
             // Check if warning is already there.
-            if (inp.parentNode.querySelectorAll('.' + warningClass).length) {
+            parent = inp.parentNode.parentNode.parentNode
+            if (parent.querySelectorAll('.' + warningClass).length) {
                 return;
             }
 
@@ -90,11 +96,11 @@
             }
             message = interpolate(message, [timezoneOffset]);
 
-            const warning = document.createElement('span');
-            warning.className = warningClass;
+            const warning = document.createElement('p');
+            warning.className = warningClass + " col mb-1 px-3";
             warning.textContent = message;
-            inp.parentNode.appendChild(document.createElement('br'));
-            inp.parentNode.appendChild(warning);
+            parent.appendChild(document.createElement('br'));
+            parent.appendChild(warning);
         },
         // Add clock widget to a given field
         addClock: function(inp) {
@@ -108,6 +114,7 @@
             inp.parentNode.insertBefore(shortcuts_span, inp.nextSibling);
             const now_link = document.createElement('a');
             now_link.href = "#";
+            now_link.className = "btn btn-primary px-2";
             now_link.textContent = gettext('Now');
             now_link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -115,6 +122,7 @@
             });
             const clock_link = document.createElement('a');
             clock_link.href = '#';
+            clock_link.className = 'btn btn-primary px-2';
             clock_link.id = DateTimeShortcuts.clockLinkName + num;
             clock_link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -124,13 +132,11 @@
             });
 
             quickElement(
-                'span', clock_link, '',
-                'class', 'clock-icon',
+                'i', clock_link, '',
+                'class', 'feather icon-clock m-0',
                 'title', gettext('Choose a Time')
             );
-            shortcuts_span.appendChild(document.createTextNode('\u00A0'));
             shortcuts_span.appendChild(now_link);
-            shortcuts_span.appendChild(document.createTextNode('\u00A0|\u00A0'));
             shortcuts_span.appendChild(clock_link);
 
             // Create clock link div
@@ -151,12 +157,12 @@
             const clock_box = document.createElement('div');
             clock_box.style.display = 'none';
             clock_box.style.position = 'absolute';
-            clock_box.className = 'clockbox module';
+            clock_box.className = 'clockbox module bg-white';
             clock_box.id = DateTimeShortcuts.clockDivName + num;
             document.body.appendChild(clock_box);
             clock_box.addEventListener('click', function(e) { e.stopPropagation(); });
 
-            quickElement('h2', clock_box, gettext('Choose a time'));
+            quickElement('h5', clock_box, gettext('Choose a time'), 'class', 'px-2 text-primary');
             const time_list = quickElement('ul', clock_box);
             time_list.className = 'timelist';
             // The list of choices can be overridden in JavaScript like this:
@@ -194,12 +200,12 @@
             // Recalculate the clockbox position
             // is it left-to-right or right-to-left layout ?
             if (window.getComputedStyle(document.body).direction !== 'rtl') {
-                clock_box.style.left = findPosX(clock_link) + 17 + 'px';
+                clock_box.style.left = findPosX(clock_link) + (-40) + 'px';
             }
             else {
                 // since style's width is in em, it'd be tough to calculate
                 // px value of it. let's use an estimated px for now
-                clock_box.style.left = findPosX(clock_link) - 110 + 'px';
+                clock_box.style.left = findPosX(clock_link) - 50 + 'px';
             }
             clock_box.style.top = Math.max(0, findPosY(clock_link) - 30) + 'px';
 
@@ -236,6 +242,7 @@
             inp.parentNode.insertBefore(shortcuts_span, inp.nextSibling);
             const today_link = document.createElement('a');
             today_link.href = '#';
+            today_link.className = 'btn btn-primary px-2';
             today_link.appendChild(document.createTextNode(gettext('Today')));
             today_link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -243,6 +250,7 @@
             });
             const cal_link = document.createElement('a');
             cal_link.href = '#';
+            cal_link.className = 'btn btn-primary px-2';
             cal_link.id = DateTimeShortcuts.calendarLinkName + num;
             cal_link.addEventListener('click', function(e) {
                 e.preventDefault();
@@ -251,13 +259,13 @@
                 DateTimeShortcuts.openCalendar(num);
             });
             quickElement(
-                'span', cal_link, '',
-                'class', 'date-icon',
+                'i', cal_link, '',
+                'class', 'feather icon-calendar m-0',
                 'title', gettext('Choose a Date')
             );
-            shortcuts_span.appendChild(document.createTextNode('\u00A0'));
+            // shortcuts_span.appendChild(document.createTextNode('\u00A0'));
             shortcuts_span.appendChild(today_link);
-            shortcuts_span.appendChild(document.createTextNode('\u00A0|\u00A0'));
+            // shortcuts_span.appendChild(document.createTextNode('\u00A0|\u00A0'));
             shortcuts_span.appendChild(cal_link);
 
             // Create calendarbox div.

@@ -9,6 +9,8 @@ from Home.api.Quiz_profileApi import quiz_log_router
 from restauth.api import auth_router
 from restauth import views
 from restauth.authorization import AuthBearer
+from django.conf import settings
+from django.conf.urls.static import static
 
 api = NinjaAPI(
     title='Amt7ani',
@@ -31,7 +33,7 @@ urlpatterns = [
     path("email_confirmatin/", views.confirm_em, name='emailC'),
     path('__debug__/', include('debug_toolbar.urls')),
     # path('silk/', include('silk.urls', namespace='silk'))
-]
+]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 #For removing authall from admin
 from django.contrib import admin
 from allauth.socialaccount.models import SocialToken, SocialAccount, SocialApp

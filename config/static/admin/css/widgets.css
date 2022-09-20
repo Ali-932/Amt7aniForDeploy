@@ -1,24 +1,20 @@
 /* SELECTOR (FILTER INTERFACE) */
 
 .selector {
-    width: 800px;
+    /* width: 800px; */
     float: left;
 }
 
 .selector select {
-    width: 380px;
+    /* width: 380px; */
     height: 17.2em;
 }
 
 .selector-available, .selector-chosen {
     float: left;
-    width: 380px;
+    min-width: 320px;
     text-align: center;
-    margin-bottom: 5px;
-}
-
-.selector-chosen select {
-    border-top: none;
+    margin: 0 5px 5px 5px;
 }
 
 .selector-available h2, .selector-chosen h2 {
@@ -58,7 +54,7 @@
 }
 
 .selector .selector-available input {
-    width: 320px;
+    /* width: auto; */
     margin-left: 8px;
 }
 
@@ -272,8 +268,7 @@ p.datetime {
 }
 
 .datetime input, .form-row .datetime input.vDateField, .form-row .datetime input.vTimeField {
-    margin-left: 5px;
-    margin-bottom: 4px;
+    margin-left: 0px;
 }
 
 table p.datetime {
@@ -342,7 +337,7 @@ p.file-upload {
 }
 
 .aligned p.file-upload {
-    margin-left: 170px;
+    margin-left: 0;
 }
 
 .file-upload a {
@@ -374,6 +369,7 @@ span.clearable-file-input label {
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
     overflow: hidden;
     position: relative;
+    z-index: 100;
 }
 
 .clockbox {
@@ -401,6 +397,7 @@ span.clearable-file-input label {
     font-size: 12px;
     color: #333;
     background: var(--accent);
+    caption-side: top;
 }
 
 .calendar th {
@@ -479,7 +476,7 @@ span.clearable-file-input label {
 .calendarbox .calendarnav-previous, .calendarbox .calendarnav-next {
     display: block;
     position: absolute;
-    top: 8px;
+    top: 14px;
     width: 15px;
     height: 15px;
     text-indent: -9999px;
@@ -553,22 +550,4 @@ ul.timelist, .timelist li {
 .related-widget-wrapper {
     float: left;       /* display properly in form rows with multiple fields */
     overflow: hidden;  /* clear floated contents */
-}
-
-.related-widget-wrapper-link {
-    opacity: 0.3;
-}
-
-.related-widget-wrapper-link:link {
-    opacity: .8;
-}
-
-.related-widget-wrapper-link:link:focus,
-.related-widget-wrapper-link:link:hover {
-    opacity: 1;
-}
-
-select + .related-widget-wrapper-link,
-.related-widget-wrapper-link + .related-widget-wrapper-link {
-    margin-left: 7px;
 }

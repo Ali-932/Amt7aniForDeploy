@@ -37,7 +37,8 @@
 
     function updateRelatedObjectLinks(triggeringLink) {
         const $this = $(triggeringLink);
-        const siblings = $this.nextAll('.view-related, .change-related, .delete-related');
+        const $parent = $(triggeringLink.parentNode.parentNode)
+        const siblings = $parent.find('.view-related, .change-related, .delete-related');
         if (!siblings.length) {
             return;
         }
