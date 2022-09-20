@@ -186,7 +186,7 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (os.path.join('static'),)
 
-django_heroku.settings(locals())
+django_heroku.settings(locals(),staticfiles=False)
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
