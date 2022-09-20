@@ -30,7 +30,7 @@ urlpatterns = [
     path("api/", api.urls),
     path("email_confirmatin/", views.confirm_em, name='emailC'),
     path('__debug__/', include('debug_toolbar.urls')),
-    path('silk/', include('silk.urls', namespace='silk'))
+    # path('silk/', include('silk.urls', namespace='silk'))
 ]
 #For removing authall from admin
 from django.contrib import admin
