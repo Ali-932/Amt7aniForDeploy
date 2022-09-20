@@ -105,11 +105,20 @@ TEMPLATES = [
 SESSION_COOKIE_SECURE = False
 WSGI_APPLICATION = 'config.wsgi.application'
 
-default_dburl = 'sqlite:///' + str(BASE_DIR / 'db.sqlite3')
-DATABASES = {
-    'default': config('DATABASE_URL', default=default_dburl, cast=db_url)
+# default_dburl = 'sqlite:///' + str(BASE_DIR / 'db.sqlite3')
+# DATABASES = {
+#     'default': config('DATABASE_URL', default=default_dburl, cast=db_url)
+# }
+DATABASES={
+    'default':{
+        'ENGINE':'django.db.backends.postgresql_psycopg2',
+        'NAME':'db1kpp80n3g4bk',
+        'USER':'xlzydzhcindkfz',
+        'PASSWORD':'6582a4246100e31258af93ca35de62993403e297f8a4497c85452b7de0bf5bca',
+        'HOST':'ec2-63-32-248-14.eu-west-1.compute.amazonaws.com',
+        'PORT':'5432',
+    }
 }
-
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
 EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'#smtp
