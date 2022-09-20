@@ -35,7 +35,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default=[], cast=Csv())
 # Application definition
 
 INSTALLED_APPS = [
-    # 'ash',
+    'ash',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -195,7 +195,7 @@ STATIC_URL = '/static/'
 
 STATICFILES_DIRS = (os.path.join('static'),)
 
-django_heroku.settings(locals(),staticfiles=False)
+django_heroku.settings(locals())
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
 
