@@ -41,7 +41,7 @@ def signup(request, account_in: AccountIn):
     try:
         validate_password(password=account_in.password1)
     except exceptions.ValidationError as e:
-        return status.BAD_REQUEST_400, {'detail': '{}'.format(e)}
+        return status.BAD_REQUEST_400, {'detail': '{}'.format(e).strip('[]')}
     try:
         st = Stage.objects.get(id=account_in.stage)
     except:
@@ -195,7 +195,7 @@ def reset_password(request, pass_reset: ResetPassword):
         validate_password(password=pass_reset.password1)
 
     except exceptions.ValidationError as e:
-        return status.BAD_REQUEST_400, {'detail': '{}'.format(e)}
+        return status.BAD_REQUEST_400, {'detail': '{}'.format(e).strip('[]')}
     else:
         user.set_password(pass_reset.password1)
         user.save()

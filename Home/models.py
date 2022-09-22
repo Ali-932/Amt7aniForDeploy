@@ -162,16 +162,22 @@ class Subjects(models.Model):
 class Chapters(models.Model):
     name = models.CharField(max_length=255, blank=True)
     subject = models.ForeignKey(Subjects, on_delete=models.CASCADE, related_name='chapter_subject', null=True)
-
-
+    num = models.IntegerField(editable=False)
 
     def get_All_questions(self, subject, stage):
         questions = Question.objects.prefetch_related('choices_question').filter(quiz__subject=subject,
-                                                                                 quiz__stage=stage).order_by('?')
+                                                                           quiz__stage=stage).order_by('?')
         return questions
+    def save(self, *args, **kwargs):
+        try:
+            self.num = Chapters.objects.filter(subject=self.subject).latest('num').num + 1
+            super().save(*args, **kwargs)
+        except:
+            self.num = '1'
+            super().save(*args, **kwargs)
 
     def __str__(self):
-        return self.name
+        return str(self.num)+'- '+self.name
 
     class Meta:
         verbose_name = 'Chapter'
@@ -226,10 +232,9 @@ class Quiz(models.Model):
         print(count)
         return count
 
-    # class Meta:
-    #     unique_together = ("subject",
-    #                        # "chapter",
-    #                        'stage')
+    class Meta:
+        verbose_name='quiz'
+        verbose_name_plural='quizzes'
 
     def __str__(self):
         return self.name
@@ -265,7 +270,6 @@ class choices(models.Model):
     def save(self, *args, **kwargs):
         try:
             self.num = choices.objects.filter(question=self.question).latest('num').num + 1
-            print(self.num)
             super().save(*args, **kwargs)
         except:
             self.num = '1'

@@ -180,7 +180,7 @@ class QuestionAdmin(NestedModelAdmin):
 
 @admin.register(Chapters)
 class ch(NestedModelAdmin):
-    list_display = ('id', 'name', 'subject','stage_name')
+    list_display = ('id', 'name', 'subject','stage_name','num')
     list_filter = ('subject',)
     search_fields = ('name',)
     inlines = [QuestionInlineAdmin,]
