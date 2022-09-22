@@ -79,6 +79,7 @@ class QuizList(Schema):
 class Profileinfo(Schema):
     name:str
     stage_id:int
+    stage_name:str
     gender:str
 
 class StagesOut(Schema):

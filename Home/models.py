@@ -150,6 +150,7 @@ class Subjects(models.Model):
     class Meta:
         verbose_name = 'Subject'
         verbose_name_plural = 'Subjects'
+        unique_together = ("name", "stage",)
 
     def __str__(self):
         return self.name
