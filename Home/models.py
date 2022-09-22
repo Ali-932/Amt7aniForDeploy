@@ -92,7 +92,7 @@ class StageType():
 
 
 class Profile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE,related_name='user_profile')
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='user_profile')
     name = models.CharField(max_length=35)
     gender = models.CharField(max_length=255, choices=Gender.gender)
     created = models.DateTimeField(auto_now_add=True, )
@@ -166,8 +166,9 @@ class Chapters(models.Model):
 
     def get_All_questions(self, subject, stage):
         questions = Question.objects.prefetch_related('choices_question').filter(quiz__subject=subject,
-                                                                           quiz__stage=stage).order_by('?')
+                                                                                 quiz__stage=stage).order_by('?')
         return questions
+
     def save(self, *args, **kwargs):
         try:
             self.num = Chapters.objects.filter(subject=self.subject).latest('num').num + 1
@@ -177,7 +178,7 @@ class Chapters(models.Model):
             super().save(*args, **kwargs)
 
     def __str__(self):
-        return str(self.num)+'- '+self.name
+        return str(self.num) + '- ' + self.name
 
     class Meta:
         verbose_name = 'Chapter'
@@ -212,29 +213,31 @@ class Quiz(models.Model):
     @receiver(post_save, sender=Chapters)
     def quiz_all(sender, instance, **kwargs):
         try:
-            q = Quiz.objects.get(name='شامل', subject=instance.subject,stage=instance.subject.stage)
+            q = Quiz.objects.get(name='شامل', subject=instance.subject, stage=instance.subject.stage)
             ch = Chapters.objects.filter(subject__stage=instance.subject.stage, subject=instance.subject)
             q.chapter.set(ch)
             q.save()
         except Quiz.DoesNotExist:
-            q = Quiz.objects.create(subject=instance.subject, stage=instance.subject.stage, name='شامل',timer=TimeChoices.min_60,q_num=100)
+            q = Quiz.objects.create(subject=instance.subject, stage=instance.subject.stage, name='شامل',
+                                    timer=TimeChoices.min_60, q_num=100)
             ch = Chapters.objects.filter(subject__stage=instance.subject.stage, subject=instance.subject)
             q.chapter.set(ch)
             q.save()
 
     def get_questions(self):
-        ch=Chapters.objects.filter(quiz=self)
+        ch = Chapters.objects.filter(quiz=self)
         questions = Question.objects.filter(chapter__in=ch).order_by('?')[:self.q_num]
         return questions
+
     def get_questions_count(self):
-        ch=Chapters.objects.filter(quiz=self)
+        ch = Chapters.objects.filter(quiz=self)
         count = Question.objects.filter(chapter__in=ch).aggregate(count=Count('id'))['count']
         print(count)
         return count
 
     class Meta:
-        verbose_name='quiz'
-        verbose_name_plural='quizzes'
+        verbose_name = 'quiz'
+        verbose_name_plural = 'quizzes'
 
     def __str__(self):
         return self.name
@@ -290,9 +293,10 @@ class UserQuizzes(models.Model):
                                      related_name='userquizzes_userscoring')
 
     def get_chapter(self):
-        ch=Chapters.objects.filter(quiz=self.quiz).values_list('name',flat=True)
+        ch = Chapters.objects.filter(quiz=self.quiz).values_list('name', flat=True)
 
         return ch
+
 
 class UserScoring(models.Model):
     user = models.OneToOneField(Profile, on_delete=models.CASCADE, null=True, related_name='profile_scoring')
