@@ -13,12 +13,19 @@ subject_router = Router(tags=['Subject'])
     404:FourOFourOut
 })
 def get_stages(request):
-    result=[]
+    result = []
     for t in Stage.objects.all():
-        result.append({
-            'id':t.id,
-            'stage':t.stages
-                })
+        if t.type == 'لا يوجد':
+            result.append({
+                'id': t.id,
+                'stage': t.stages
+            })
+        else:
+            result.append({
+                'id': t.id,
+                'stage': t.stages.split(' ')[0] + ' ' + t.type
+            })
+
     return status.OK_200, result
 
 @subject_router.get('/get_default_subject',response={
