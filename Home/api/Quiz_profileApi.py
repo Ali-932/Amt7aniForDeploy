@@ -36,8 +36,7 @@ def get_quizzes_history(request):
         result=[]
         for a in uq:
             result.append({
-
-                'subject': a.quiz.subject.name, 'chapter': a.quiz.name, 'score': a.score, 'created': str(a.created)
+                'subject': a.quiz.subject.name, 'chapter': a.quiz.name, 'score': f'{a.score}'+ '/'+ f'{(a.quiz.q_num*5)}', 'created': str(a.created)
             })
         print(result)
         return status.OK_200,result
