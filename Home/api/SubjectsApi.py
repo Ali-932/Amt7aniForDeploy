@@ -1,7 +1,7 @@
 from typing import List
 
 from ninja import Router
-from Home.schemas import SubjectsOut, FourOFourOut, StageOut, StagesOut
+from Home.schemas import SubjectsOut, FourOFourOut, StagesOut
 from Home.models import Stage, Subjects, Profile
 from config import status
 

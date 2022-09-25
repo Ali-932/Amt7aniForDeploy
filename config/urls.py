@@ -34,7 +34,7 @@ urlpatterns = [
     path('__debug__/', include('debug_toolbar.urls')),
     # path('silk/', include('silk.urls', namespace='silk'))
 ]+ static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)\
-              # + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+              + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 #For removing authall from admin
 from django.contrib import admin
 from allauth.socialaccount.models import SocialToken, SocialAccount, SocialApp

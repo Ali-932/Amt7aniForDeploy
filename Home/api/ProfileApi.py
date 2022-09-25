@@ -2,8 +2,8 @@ from typing import List
 
 from django.contrib.auth import get_user_model
 from ninja import Router
-from Home.models import Quiz, UserQuizzes, choices, Subjects, UserScoring, Profile, Chapters
-from Home.schemas import FourOFourOut, QuizHistoryIn, TwoOO, QuizHistoryOut, AvgNtottal, Profileinfo
+from Home.models import  Profile
+from Home.schemas import FourOFourOut, TwoOO, Profileinfo
 from config import status
 
 User = get_user_model()

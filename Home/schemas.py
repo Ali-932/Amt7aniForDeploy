@@ -21,15 +21,13 @@ class chapterOut(Schema):
 
 class sub(Schema):
     name: str
-    id:int
+    id: int
     stage: StageOut
 
 
 class SubjectsOut(Schema):
     subject: sub
     quiz_count: int
-
-
 
 
 class QuestionOut(Schema):
@@ -46,45 +44,55 @@ class ChoicesOut(Schema):
 class Quiz(Schema):
     Questions: QuestionOut
     Choices: List[ChoicesOut]
+
+
 class QuizOut(Schema):
-    quiz:List[Quiz]
-    timer:str
-    q_num:int
+    quiz: List[Quiz]
+    timer: str
+    q_num: int
+
+
 class QuizHistoryOut(Schema):
-    subject:str
-    chapter:str
-    score:str
-    created:str
+    subject: str
+    chapter: str
+    score: str
+    created: str
+
 
 class QuizHistoryIn(Schema):
-    quiz_id:int
+    quiz_id: int
     created: str
-    score:int
+    score: int
 
 
-class QuizListin(Schema):
-    subject: int
-    stage:int
+# class QuizListin(Schema):
+#     subject: int
+#     stage:int
 
 class AvgNtottal(Schema):
-    avg:int
-    total:int
+    avg: int
+    total: int
+
 
 class QuizList(Schema):
     name: str
     chapter: List[chapterOut]
     q_num: int
     timer: str
-    id:int
+    id: int
+
+
 class Profileinfo(Schema):
-    name:str
-    stage_id:int
-    stage_name:str
-    gender:str
+    name: str
+    stage_id: int
+    stage_name: str
+    gender: str
+
 
 class StagesOut(Schema):
-    id:int
-    stage:str
+    id: int
+    stage: str
+
 
 class StageIn(Schema):
     stage: str

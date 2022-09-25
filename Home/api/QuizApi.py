@@ -1,9 +1,7 @@
 from typing import List
-
-from django.db.models import Count
 from ninja import Router
-from Home.models import Chapters, Quiz, Question, Stage, UserQuizzes, choices, Subjects, Profile
-from Home.schemas import FourOFourOut, QuizOut, QuizListin, QuizList
+from Home.models import Chapters, Quiz, Stage, Subjects, Profile
+from Home.schemas import FourOFourOut, QuizOut, QuizList
 from config import status
 
 quiz_router = Router(tags=['Quiz'])
