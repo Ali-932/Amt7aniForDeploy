@@ -315,9 +315,11 @@ class UserScoring(models.Model):
 
     def save(self, *args, **kwargs):
         uq = UserQuizzes.objects.filter(user=self.user)
-        q = Quiz.objects.values('q_num').filter(User_quizzes__in=uq).annotate(total=Sum('q_num'))[0]['total']
+        q = Quiz.objects.filter(User_quizzes__in=uq).aggregate(total=Sum('q_num'))['total']
+        print(q)
         self.total_score_points = (q * 5)
         self.total_right_points = uq.aggregate(score=Sum('score'))['score']
+        print(self.total_right_points)
         super().save(*args, **kwargs)
 
     def get_avg_score(self):
@@ -326,7 +328,7 @@ class UserScoring(models.Model):
 
     def get_total_quizzes(self):
         uq = UserQuizzes.objects.filter(user=self.user)
-        q = Quiz.objects.values('q_num').filter(User_quizzes__in=uq).annotate(total=Count('id'))[0]['total']
+        q = Quiz.objects.filter(User_quizzes__in=uq).aggregate(total=Count('id'))['total']
         return q
 
 # django_loger

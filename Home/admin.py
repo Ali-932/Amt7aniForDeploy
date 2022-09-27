@@ -7,7 +7,7 @@ from django.utils.html import format_html
 from django.utils.http import urlencode
 from nested_admin.nested import NestedModelAdmin, NestedTabularInline, NestedStackedInline
 
-from .models import Profile, Stage, Question, Chapters, Subjects, Quiz, UserQuizzes, choices
+from .models import Profile, Stage, Question, Chapters, Subjects, Quiz, UserQuizzes, choices,UserScoring
 from django import forms
 from super_inlines.admin import SuperInlineModelAdmin, SuperModelAdmin
 User = get_user_model()
@@ -24,6 +24,7 @@ ADMIN_ORDERING = {
         "Question",
         "Quiz",
         "UserQuizzes",
+        'UserScoring'
     ],
 }
 
@@ -190,3 +191,11 @@ class ch(NestedModelAdmin):
         else: return None
 
     stage_name.short_description = 'stage '
+@admin.register(UserQuizzes)
+class usa(admin.ModelAdmin):
+    list_display = ('score','created')
+
+@admin.register(UserScoring)
+class usa(admin.ModelAdmin):
+    list_display = ('total_score_points', 'total_right_points')
+
