@@ -316,10 +316,8 @@ class UserScoring(models.Model):
     def save(self, *args, **kwargs):
         uq = UserQuizzes.objects.filter(user=self.user)
         q = Quiz.objects.filter(User_quizzes__in=uq).aggregate(total=Sum('q_num'))['total']
-        print(q)
         self.total_score_points = (q * 5)
         self.total_right_points = uq.aggregate(score=Sum('score'))['score']
-        print(self.total_right_points)
         super().save(*args, **kwargs)
 
     def get_avg_score(self):

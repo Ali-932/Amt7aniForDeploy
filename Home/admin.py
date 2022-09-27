@@ -191,11 +191,3 @@ class ch(NestedModelAdmin):
         else: return None
 
     stage_name.short_description = 'stage '
-@admin.register(UserQuizzes)
-class usa(admin.ModelAdmin):
-    list_display = ('score','created')
-
-@admin.register(UserScoring)
-class usa(admin.ModelAdmin):
-    list_display = ('total_score_points', 'total_right_points')
-
