@@ -65,6 +65,7 @@ def signup(request, account_in: AccountIn):
 
         @receiver(email_confirmed)
         def email_confirmed_(request, email_address, **kwargs):
+            print('working')
             user = User.objects.get(email=email_address.email)
             user.is_active = True
             user.save()
