@@ -53,8 +53,10 @@ def get_avg_n_total(request):
     try:
         user = Profile.objects.get(user_id=request.auth['user_id'])
         us=UserScoring.objects.get(user=user)
-    except UserScoring.DoesNotExist:
+    except Profile.DoesNotExist:
         return status.NOT_FOUND_404, {'detail': 'User is not registered'}
+    except UserScoring.DoesNotExist:
+        return status.OK_200,{'avg':0,'total':0}
     try:
         result={
             'avg':us.get_avg_score(),
