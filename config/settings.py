@@ -122,7 +122,7 @@ DATABASES={
 }
 # Password validation
 # https://docs.djangoproject.com/en/4.1/ref/settings/#auth-password-validators
-EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'#smtp
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'#smtp
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_USE_TLS = True
 EMAIL_PORT = 587

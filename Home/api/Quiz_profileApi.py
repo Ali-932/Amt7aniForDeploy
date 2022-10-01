@@ -2,7 +2,7 @@ from typing import List
 
 from django.contrib.auth import get_user_model
 from ninja import Router
-from Home.models import Quiz, UserQuizzes, choices, Subjects, UserScoring, Profile,Chapters
+from Home.models import Quiz, UserQuizzes, UserScoring, Profile
 from Home.schemas import FourOFourOut, QuizHistoryIn, TwoOO, QuizHistoryOut, AvgNtottal, FourOO
 from config import status
 User = get_user_model()
@@ -38,7 +38,6 @@ def get_quizzes_history(request):
             result.append({
                 'subject': a.quiz.subject.name, 'chapter': a.quiz.name, 'score': f'{a.score}'+ '/'+ f'{(a.quiz.q_num*5)}', 'created': str(a.created)
             })
-        print(result)
         return status.OK_200,result
     except UserQuizzes.DoesNotExist:
         return status.NOT_FOUND_404, {'detail': 'Quizzes for the user is not registered'}

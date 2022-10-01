@@ -233,7 +233,6 @@ class Quiz(models.Model):
     def get_questions_count(self):
         ch = Chapters.objects.filter(quiz=self)
         count = Question.objects.filter(chapter__in=ch).aggregate(count=Count('id'))['count']
-        print(count)
         return count
 
     class Meta:

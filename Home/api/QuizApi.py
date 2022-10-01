@@ -49,7 +49,6 @@ def get_quiz_lists(request, sub: int,stage:int):
             'timer': q.timer,
             'id':q.id
         })
-        print(result)
     return status.OK_200, result
 
 @quiz_router.get('/get_quiz', response={
